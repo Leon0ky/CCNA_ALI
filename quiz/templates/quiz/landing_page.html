@@ -1,0 +1,46 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+    <div id="vanta-bg" class="min-h-[calc(100vh-200px)] w-full relative flex flex-col justify-center items-center">
+        <div class="hero-content text-center relative z-10">
+            <div class="max-w-md">
+              <h1 class="text-5xl font-bold">Welcome to the Quiz App!</h1>
+              <p class="py-6">Test your knowledge with our exciting quizzes. Choose between learning mode for instant feedback or exam mode for a final score.</p>
+              {% if user.is_authenticated %}
+                {# Replace classes here #}
+                <a href="{% url 'test_list' %}" class="btn-hover color-1">Start a Quiz!</a>
+              {% else %}
+                 {# Replace classes here, keep margin for spacing #}
+                 <a href="{% url 'signup' %}" class="btn-hover color-1 mr-4">Get Started - Sign Up</a>
+                 {# Replace classes here #}
+                 <a href="{% url 'login' %}" class="btn-hover color-1">Login</a>
+              {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {# ... VANTA.js Scripts ... #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://www.vantajs.com/dist/vanta.net.min.js"></script>
+    <script>
+        VANTA.NET({
+            el: "#vanta-bg", // Target the div we created
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0xcaff00,
+            backgroundColor: 0x2161f,
+            points: 7.00,
+            maxDistance: 25.00,
+            spacing: 20.00
+        });
+    </script>
+{% endblock %}

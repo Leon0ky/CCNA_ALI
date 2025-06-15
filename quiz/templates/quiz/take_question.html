@@ -1,0 +1,115 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Question {{ question_index|add:1 }} of {{ total_questions }}{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-8rem)] flex flex-col items-center justify-center px-2 py-4 md:px-4 md:py-8">
+    <div class="card w-full max-w-3xl shadow-2xl bg-base-200 md:bg-base-300 text-base-content">
+        <div class="card-body">
+            <div class="mb-6">
+                <p class="text-sm text-center text-base-content/70 mb-2">Question {{ question_index|add:1 }} of {{ total_questions }}</p>
+                <h2 class="card-title text-xl md:text-2xl font-semibold text-center !block">{{ question.text|safe }}</h2> {# !block to override DaisyUI card-title flex behavior if needed #}
+            </div>
+
+            {% if question.image %}
+                <figure class="my-4 flex justify-center">
+                    <img src="{{ question.image.url }}" alt="Question Image" class="max-w-md h-auto rounded-lg shadow-md">
+                </figure>
+            {% endif %}
+
+            {% if is_learning_mode and user_submitted %}
+                {# ------------- FEEDBACK VIEW (Learning Mode) ------------- #}
+                <div role="alert" class="alert alert-{% if is_user_correct %}success{% else %}error{% endif %} shadow-lg mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        {% if is_user_correct %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {% else %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {% endif %}
+                    </svg>
+                    <span>{% if is_user_correct %}Correct!{% else %}Incorrect.{% endif %}</span>
+                </div>
+
+                <div class="mb-4 p-4 bg-base-100 rounded-lg">
+                    <h4 class="text-lg font-semibold text-accent mb-2">Explanation:</h4>
+                    <div class="prose prose-sm max-w-none text-base-content"> {# DaisyUI prose class for formatted text #}
+                        {{ question.explanation|safe|linebreaks }}
+                    </div>
+                </div>
+
+                <div class="mb-6 p-4 bg-base-100 rounded-lg">
+                    <h4 class="text-lg font-semibold text-accent mb-2">Correct Answer(s):</h4>
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        {% for answer in correct_answers %}
+                            <li><span class="font-medium">{{ answer.text }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="card-actions justify-end mt-4">
+                    {% if question_index|add:1 < total_questions %}
+                        <a href="{% url 'take_question' attempt.id question_index|add:1 %}" class="btn btn-primary">Next Question</a>
+                    {% else %}
+                        <a href="{% url 'finish_test' attempt.id %}" class="btn btn-success">Finish Test & See Results</a>
+                    {% endif %}
+                </div>
+
+            {% else %}
+                {# ------------- ANSWERING VIEW ------------- #}
+                <form method="post" id="answer-form">
+                    {% csrf_token %}
+                    <div class="form-control mb-6 space-y-3">
+                        <label class="label pb-0">
+                            <span class="label-text text-lg font-semibold text-accent">Select your answer(s):</span>
+                        </label>
+                        {# This loop iterates through choices (radio/checkbox + label) #}
+                        {# For best DaisyUI styling, the <input> tag itself needs DaisyUI classes, #}
+                        {# e.g., class="radio radio-primary" or "checkbox checkbox-primary" #}
+                        {# This is ideally set in forms.py via widget attrs. #}
+                        {% for choice_widget in form.selected_answers %}
+                        <div class="flex items-center p-3 rounded-lg hover:bg-base-300/70 border border-base-300 transition-colors duration-150 ease-in-out">
+                            {# choice_widget.tag contains the <input type="radio/checkbox"...> #}
+                            {# If you can't add class directly in forms.py, this won't apply DaisyUI style to the input itself #}
+                            {{ choice_widget.tag }}
+                            <label class="label cursor-pointer flex-grow pl-3" for="{{ choice_widget.id_for_label }}">
+                                <span class="label-text text-base-content">{{ choice_widget.choice_label }}</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if form.errors and form.selected_answers.errors %}
+                        <div role="alert" class="alert alert-warning shadow-lg mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            <div>
+                                <h3 class="font-bold">Attention needed!</h3>
+                                <div class="text-xs">
+                                {% for error in form.selected_answers.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="card-actions justify-end mt-6">
+                        <button type="submit" class="btn btn-primary w-full md:w-auto">Submit Answer</button>
+                    </div>
+                </form>
+
+                {# Progress bar #}
+                {% if total_questions > 0 %}
+                <div class="mt-8">
+                    <progress class="progress progress-primary w-full" value="{{ question_index }}" max="{{ total_questions }}"></progress>
+                    <p class="text-center text-sm text-base-content/70 mt-1">Question {{ question_index|add:1 }} of {{ total_questions }}</p>
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{# Optional: Add JS for form validation or dynamic behavior #}
+{% endblock %}

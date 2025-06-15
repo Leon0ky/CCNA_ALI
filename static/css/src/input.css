@@ -1,0 +1,31 @@
+/* C:\Users\legen\Documents\Code\ccna\static\css\src\input.css */
+@import "tailwindcss"; /* Recommended for Tailwind v4+ */
+
+/* Your custom styles (like .btn-hover) */
+.btn-hover {
+    display: inline-block;
+    width: 200px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    height: 55px;
+    text-align: center;
+    border: none;
+    background-size: 300% 100%;
+    border-radius: 50px;
+    transition: all .4s ease-in-out;
+    line-height: 55px;
+    text-decoration: none;
+}
+.btn-hover:hover {
+    background-position: 100% 0;
+    transition: all .4s ease-in-out;
+}
+.btn-hover:focus {
+    outline: none;
+}
+.btn-hover.color-1 {
+    background-image: linear-gradient(to right, #25aae1, #4481eb, #04befe, #3f86ed);
+    box-shadow: 0 4px 15px 0 rgba(65, 132, 234, 0.75);
+    color: #fff;
+}

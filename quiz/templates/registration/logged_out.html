@@ -1,0 +1,12 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Logged Out{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md text-center">
+    <h2 class="text-2xl font-bold mb-6">Logged Out</h2>
+    <p class="mb-6">You have been successfully logged out.</p>
+    <a href="{% url 'login' %}" class="btn btn-primary mr-4">Login Again</a>
+    <a href="{% url 'landing_page' %}" class="btn btn-ghost">Go to Home</a>
+</div>
+{% endblock %}

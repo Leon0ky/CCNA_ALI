@@ -1,0 +1,17 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Confirm Delete User{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-base-100 p-8 rounded-xl shadow-md text-center">
+    <h2 class="text-2xl font-bold mb-6">Confirm Delete User</h2>
+    <p class="mb-4">Are you sure you want to delete the user:</p>
+    <p class="italic font-semibold mb-6">"{{ user_to_delete.username }}" ({{ user_to_delete.email|default:"No Email" }})</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-error mr-4">Yes, Delete User</button>
+        <a href="{% url 'custom_admin_users' %}" class="btn btn-ghost">Cancel</a>
+    </form>
+</div>
+{% endblock %}

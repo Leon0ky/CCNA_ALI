@@ -1,0 +1,120 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-base-100 p-8 rounded-xl shadow-md"> {# Use bg-base-100 for contrast in dark theme #}
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold">Manage Users</h2>
+        {# Link to Django admin user creation or custom user creation if needed #}
+        {# For now, we'll assume new users sign up via the signup page #}
+        {# <a href="{% url 'admin:auth_user_add' %}" class="btn btn-primary">Add New User (Django Admin)</a> #}
+    </div>
+
+    {# Filter and Search Section #}
+    <div class="mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        {# Search Bar #}
+        <div class="flex-grow">
+            <form action="{% url 'custom_admin_users' %}" method="get" class="flex w-full">
+                <input type="text" name="q" placeholder="Search by username or email" class="input input-bordered flex-grow" value="{{ search_query }}">
+                <button type="submit" class="btn btn-primary ml-2">Search</button>
+                {% if search_query %}<a href="{% url 'custom_admin_users' %}?status={{ filter_status }}" class="btn btn-ghost ml-2">Clear</a>{% endif %}
+            </form>
+        </div>
+
+        {# Filter Buttons #}
+        <div class="tabs tabs-boxed">
+            <a href="{% url 'custom_admin_users' %}?q={{ search_query }}&status=all" class="tab {% if filter_status == 'all' %}tab-active{% endif %}">All</a>
+            <a href="{% url 'custom_admin_users' %}?q={{ search_query }}&status=staff" class="tab {% if filter_status == 'staff' %}tab-active{% endif %}">Staff</a>
+            <a href="{% url 'custom_admin_users' %}?q={{ search_query }}&status=normal" class="tab {% if filter_status == 'normal' %}tab-active{% endif %}">Normal</a>
+            <a href="{% url 'custom_admin_users' %}?q={{ search_query }}&status=blocked" class="tab {% if filter_status == 'blocked' %}tab-active{% endif %}">Blocked</a>
+            <a href="{% url 'custom_admin_users' %}?q={{ search_query }}&status=active" class="tab {% if filter_status == 'active' %}tab-active{% endif %}">Active (Not Blocked)</a>
+        </div>
+    </div>
+
+    {% if users %}
+        <div class="overflow-x-auto">
+            <table class="table w-full table-zebra">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Blocked Until</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <th>{{ user.id }}</th>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email|default:"N/A" }}</td>
+                        <td>
+                            {% if user.is_superuser %}
+                                <div class="badge badge-error mr-1">Superuser</div>
+                            {% endif %}
+                            {% if user.is_staff %}
+                                <div class="badge badge-info mr-1">Staff</div>
+                            {% else %}
+                                <div class="badge badge-success mr-1">Normal</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {# Access blocked_until via user.userprofile #}
+                            {% if user.userprofile.blocked_until and user.userprofile.blocked_until > now %}
+                                <span class="badge badge-warning">Blocked: {{ user.userprofile.blocked_until|date:"Y-m-d H:i" }}</span>
+                            {% else %}
+                                <span class="badge badge-ghost">Not Blocked</span>
+                            {% endif %}
+                        </td>
+                        <td class="flex flex-wrap gap-2">
+                            {# Toggle Staff #}
+                            <form action="{% url 'custom_admin_toggle_staff' user.id %}" method="post">
+                                {% csrf_token %}
+                                {% if user.is_staff %}
+                                    <button type="submit" class="btn btn-warning btn-xs">Remove Staff</button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-info btn-xs">Make Staff</button>
+                                {% endif %}
+                            </form>
+
+                            {# Toggle Superuser #}
+                            {% if request.user.is_superuser and user != request.user %} {# Only superusers can toggle other superusers #}
+                            <form action="{% url 'custom_admin_toggle_superuser' user.id %}" method="post">
+                                {% csrf_token %}
+                                {% if user.is_superuser %}
+                                    <button type="submit" class="btn btn-error btn-xs">Remove Superuser</button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-accent btn-xs">Make Superuser</button>
+                                {% endif %}
+                            </form>
+                            {% endif %}
+
+
+                            {# Block/Unblock #}
+                            {% if user.userprofile.blocked_until and user.userprofile.blocked_until > now %}
+                                <form action="{% url 'custom_admin_unblock_user' user.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-xs">Unblock</button>
+                                </form>
+                            {% else %}
+                                <a href="{% url 'custom_admin_block_user' user.id %}" class="btn btn-warning btn-xs">Block</a>
+                            {% endif %}
+                            
+                            {# Delete User #}
+                            {% if user != request.user %} {# Prevent deleting self #}
+                                <a href="{% url 'custom_admin_delete_user' user.id %}" class="btn btn-error btn-xs">Delete</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-center mt-4">No users found matching your criteria.</p>
+    {% endif %}
+</div>
+{% endblock %}

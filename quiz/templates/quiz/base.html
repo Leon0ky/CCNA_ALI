@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="abyss">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Quiz App{% endblock %}</title>
+    {# This path assumes output.css will be in quiz/static/quiz/css/ #}
+    <link href="{% static 'quiz/css/output.css' %}" rel="stylesheet" type="text/css" />
+</head>
+<body class="bg-base-100 text-base-content">
+    <div class="container mx-auto p-4">
+        {% include 'quiz/navbar.html' %} {# Assuming your navbar path is correct #}
+
+        {% if messages %}
+            <div class="messages mt-4">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} shadow-lg">
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}
+            {# Example content for testing, like the DaisyUI button #}
+            <button class="btn btn-primary">Hello daisyUI from base</button>
+            <div class="p-4">
+                <span class="text-accent">This text should use abyss accent color.</span>
+            </div>
+        {% endblock %}
+    </div>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

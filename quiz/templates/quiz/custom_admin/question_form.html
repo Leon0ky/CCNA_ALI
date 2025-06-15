@@ -1,0 +1,78 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}{% if is_edit %}Edit Question{% else %}Add New Question{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-md">
+    <h2 class="text-3xl font-bold mb-6">{% if is_edit %}Edit Question{% else %}Add New Question{% endif %}</h2>
+
+    <form method="post" enctype="multipart/form-data"> {# Needed for file uploads #}
+        {% csrf_token %}
+
+        {# Main Question Form #}
+        <div class="form-control mb-4">
+            {{ form.test.label_tag }}
+            {{ form.test }}
+            {% if form.test.errors %}<p class="text-error text-sm">{{ form.test.errors }}</p>{% endif %}
+        </div>
+        <div class="form-control mb-4">
+            {{ form.text.label_tag }}
+            {{ form.text }}
+            {% if form.text.errors %}<p class="text-error text-sm">{{ form.text.errors }}</p>{% endif %}
+        </div>
+         <div class="form-control mb-4">
+            {{ form.image.label_tag }}
+            {{ form.image }}
+            {% if form.image.errors %}<p class="text-error text-sm">{{ form.image.errors }}</p>{% endif %}
+             {% if form.instance.image and form.instance.image.url %}
+                 <p class="text-sm mt-2">Current Image: <a href="{{ form.instance.image.url }}" target="_blank" class="text-blue-600 hover:underline">{{ form.instance.image.name }}</a></p>
+             {% endif %}
+        </div>
+         <div class="form-control mb-6">
+            {{ form.explanation.label_tag }}
+            {{ form.explanation }}
+            {% if form.explanation.errors %}<p class="text-error text-sm">{{ form.explanation.errors }}</p>{% endif %}
+        </div>
+
+        {# Inline Formset for Answers #}
+        <h3 class="text-xl font-semibold mb-4">Answers (provide exactly 4)</h3>
+        {{ formset.management_form }} {# Crucial for formsets #}
+
+        {% for answer_form in formset %}
+             <div class="border p-4 rounded-md mb-4 bg-gray-50">
+                 {% if answer_form.errors %}<div class="alert alert-error shadow-lg mb-4">{% for field, errors in answer_form.errors.items %}{% for error in errors %}<p>{{ field|capfirst }}: {{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}
+
+                {{ answer_form.id }} {# Hidden field for existing answers #}
+                {{ answer_form.DELETE }} {# Hidden checkbox for deletion #}
+
+                <div class="form-control mb-2">
+                    {{ answer_form.text.label_tag }}
+                    {{ answer_form.text }}
+                </div>
+                <div class="form-control flex-row items-center">
+                     {{ answer_form.is_correct.label_tag }}
+                     {{ answer_form.is_correct }}
+                 </div>
+             </div>
+        {% endfor %}
+
+         {% if formset.non_form_errors %}
+            <div class="alert alert-error shadow-lg mb-4">
+                 {% for error in formset.non_form_errors %}
+                     <p>{{ error }}</p>
+                 {% endfor %}
+            </div>
+         {% endif %}
+         {% if form.non_field_errors %}
+             <div class="alert alert-error shadow-lg mb-4">
+                 {% for error in form.non_field_errors %}
+                     <p>{{ error }}</p>
+                 {% endfor %}
+             </div>
+         {% endif %}
+
+        <button type="submit" class="btn btn-primary mt-6">Save Question</button>
+        <a href="{% url 'custom_admin_questions' %}" class="btn btn-ghost mt-6 ml-4">Cancel</a>
+    </form>
+</div>
+{% endblock %}

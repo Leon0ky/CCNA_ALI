@@ -1,0 +1,61 @@
+/* C:\Users\legen\Documents\Code\ccna\quiz\static\quiz\css\input.css */
+
+/* Standard Tailwind Directives */
+@import "tailwindcss" ;
+
+/* Configure and enable DaisyUI themes using the syntax you found */
+/* This assumes daisyui.js is in the same directory as this input.css file */
+@plugin "./daisyui.js" {
+  themes: light, dark, abyss --default; /* Enable light, dark, and set abyss as a default candidate.
+                                            You can also just list: light, dark, abyss;
+                                            And then control the active theme with data-theme="abyss" in HTML. */
+}
+
+/* Tell Tailwind where to scan for classes.
+   Path is relative to the tailwind.config.js file (if one is used by the Standalone CLI)
+   OR relative to this input.css file if the @source directive is the primary method
+   for content scanning in this specific DaisyUI "no-node" setup.
+   The DaisyUI guide for "no-node" uses @source relative to this input.css.
+*/
+@source "../../../templates/quiz/**/*.html"; /* From quiz/static/quiz/css/ to quiz/templates/quiz/ */
+/* @source "../../../forms.py"; */ /* Uncomment if you use classes in forms.py in the quiz app */
+
+
+/* === Optional: Override specific DaisyUI 'abyss' theme colors === */
+/* If the default "abyss" from daisyui.js isn't the exact shade you want,
+   you can override its CSS variables here.
+   The 'dark slate blue' (oklch(20% 0.08 209)) for base-100 (main background):
+*/
+[data-theme="abyss"] {
+  /* --b1: 0.20 0.08 209; */  /* L C H parameters. Uncomment this line to force your specific blue. */
+}
+
+
+/* === Your Custom Styles (like .btn-hover) === */
+.btn-hover {
+    display: inline-block;
+    width: 200px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    height: 55px;
+    text-align: center;
+    border: none;
+    background-size: 300% 100%;
+    border-radius: 50px;
+    transition: all .4s ease-in-out;
+    line-height: 55px;
+    text-decoration: none;
+}
+.btn-hover:hover {
+    background-position: 100% 0;
+    transition: all .4s ease-in-out;
+}
+.btn-hover:focus {
+    outline: none;
+}
+.btn-hover.color-1 {
+    background-image: linear-gradient(to right, #8ce125, #4feb44, #d8fe04, #90ed3f);
+    box-shadow: 0 4px 15px 0 rgba(153, 255, 0, 0.75);
+    color: #fff;
+}

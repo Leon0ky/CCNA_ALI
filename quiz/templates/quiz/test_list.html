@@ -1,0 +1,33 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Available Tests{% endblock %}
+
+{% block content %}
+<h2 class="text-3xl font-bold mb-6">Available Tests</h2>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for test in tests %}
+    <div class="card bg-neutral shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
+      <div class="card-body">
+        <h3 class="card-title">{{ test.name }}</h3>
+        <p>{{ test.description }}</p>
+        <div class="flex justify-between items-center mt-2 mb-4"> {# Use flex to align badges/counts #}
+            <div class="badge badge-outline">{{ test.get_test_type_display }}</div>
+            {# Display question count here #}
+            {% if test.question_count is not None %}
+                <div class="badge badge-secondary">{{ test.question_count }} Questions</div>
+            {% else %}
+                {# Fallback if count is not available (shouldn't happen with updated view) #}
+                <div class="badge badge-secondary">0 Questions</div>
+            {% endif %}
+        </div>
+        <div class="card-actions justify-end">
+          <a href="{% url 'start_test' test.id %}" class="btn btn-primary">Start Test</a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <p>No tests available yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

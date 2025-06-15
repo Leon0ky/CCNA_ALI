@@ -1,0 +1,75 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Manage Questions{% endblock %}
+
+{% block content %}
+{# Change bg-white to bg-base-100 for consistency with Abyss theme #}
+<div class="max-w-4xl mx-auto bg-base-100 p-8 rounded-xl shadow-md">
+    <div class="flex justify-between items-center mb-6">
+        {# Dynamic Heading based on whether a specific test is being managed #}
+        <h2 class="text-3xl font-bold">
+            {% if test_obj %}
+                Manage Questions for "{{ test_obj.name }}"
+            {% else %}
+                Manage All Questions
+            {% endif %}
+        </h2>
+        
+        <div class="flex flex-wrap gap-2">
+            {# Button to add a new question, dynamically linking to specific test or general #}
+            {% if test_obj %}
+                <a href="{% url 'custom_admin_add_question_to_test' test_obj.id %}" class="btn btn-primary">Add Question to This Test</a>
+                {# Button to view all questions if currently filtered by a test #}
+                <a href="{% url 'custom_admin_questions' %}" class="btn btn-secondary">View All Questions</a>
+            {% else %}
+                <a href="{% url 'custom_admin_add_question' %}" class="btn btn-primary">Add New Question</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if questions %}
+        <div class="overflow-x-auto">
+            <table class="table w-full table-zebra">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Question Text</th>
+                        <th>Test Type</th>
+                        <th>Answers</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for question in questions %}
+                    <tr>
+                        <th>{{ question.id }}</th>
+                        <td>{{ question.text|truncatechars:50 }}</td>
+                        <td>{{ question.test.name }}</td>
+                        <td>
+                            <ul>
+                                {% for answer in question.answers.all %}
+                                    <li>{% if answer.is_correct %}<span class="font-bold text-success">✔</span>{% endif %} {{ answer.text|truncatechars:30 }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td class="flex flex-wrap gap-2"> {# Use flex-wrap and gap for spacing if many buttons #}
+                            <a href="{% url 'custom_admin_edit_question' question.id %}" class="btn btn-sm btn-outline btn-info">Edit</a>
+                            <a href="{% url 'custom_admin_delete_question' question.id %}" class="btn btn-sm btn-outline btn-error">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-center mt-4">
+            {% if test_obj %}
+                No questions found for "{{ test_obj.name }}".
+                <a href="{% url 'custom_admin_add_question_to_test' test_obj.id %}" class="text-blue-400 hover:underline">Add one now</a>.
+            {% else %}
+                No questions found. <a href="{% url 'custom_admin_add_question' %}" class="text-blue-400 hover:underline">Add one now</a>.
+            {% endif %}
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

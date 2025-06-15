@@ -1,0 +1,48 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Manage Tests{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-base-100 p-8 rounded-xl shadow-md"> {# Changed bg-white to bg-base-100 for Abyss theme #}
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold">Manage Tests</h2>
+        <a href="{% url 'custom_admin_add_test' %}" class="btn btn-primary">Add New Test Type</a>
+    </div>
+
+    {% if tests %}
+        <div class="overflow-x-auto">
+            <table class="table w-full table-zebra">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                        <th>Question Actions</th> {# <--- NEW COLUMN HEADER #}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in tests %}
+                    <tr>
+                        <th>{{ test.id }}</th>
+                        <td>{{ test.name }}</td>
+                        <td><span class="badge badge-outline">{{ test.get_test_type_display }}</span></td>
+                        <td>{{ test.description|truncatechars:100 }}</td>
+                        <td class="flex flex-wrap gap-2"> {# Use flex-wrap and gap for spacing if many buttons #}
+                            <a href="{% url 'custom_admin_edit_test' test.id %}" class="btn btn-sm btn-outline btn-info">Edit</a>
+                            <a href="{% url 'custom_admin_delete_test' test.id %}" class="btn btn-sm btn-outline btn-error">Delete</a>
+                        </td>
+                        <td> {# <--- NEW CELL FOR QUESTION ACTIONS #}
+                            <a href="{% url 'custom_admin_test_questions' test.id %}" class="btn btn-sm btn-outline btn-primary">Manage Questions</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No test types found. <a href="{% url 'custom_admin_add_test' %}" class="text-blue-600 hover:underline">Add one now</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}{% if is_edit %}Edit Test Type{% else %}Add New Test Type{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md">
+    <h2 class="text-3xl font-bold mb-6">{% if is_edit %}Edit Test Type{% else %}Add New Test Type{% endif %}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {# Render the form fields #}
+        <div class="form-control mb-4">
+            {{ form.name.label_tag }}
+            {{ form.name }}
+            {% if form.name.errors %}<p class="text-error text-sm">{{ form.name.errors }}</p>{% endif %}
+        </div>
+        <div class="form-control mb-4">
+             {{ form.test_type.label_tag }}
+             {{ form.test_type }}
+             {% if form.test_type.errors %}<p class="text-error text-sm">{{ form.test_type.errors }}</p>{% endif %}
+        </div>
+        <div class="form-control mb-6">
+            {{ form.description.label_tag }}
+            {{ form.description }}
+            {% if form.description.errors %}<p class="text-error text-sm">{{ form.description.errors }}</p>{% endif %}
+        </div>
+
+        {# Display non-field errors if any #}
+         {% if form.non_field_errors %}
+             <div class="alert alert-error shadow-lg mb-4">
+                 {% for error in form.non_field_errors %}
+                     <p>{{ error }}</p>
+                 {% endfor %}
+             </div>
+         {% endif %}
+
+
+        <button type="submit" class="btn btn-primary mt-6">Save Test</button>
+        <a href="{% url 'custom_admin_tests' %}" class="btn btn-ghost mt-6 ml-4">Cancel</a>
+    </form>
+</div>
+{% endblock %}

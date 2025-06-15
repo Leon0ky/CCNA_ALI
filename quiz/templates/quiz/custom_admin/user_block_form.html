@@ -1,0 +1,25 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Block User{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-base-100 p-8 rounded-xl shadow-md">
+    <h2 class="text-2xl font-bold mb-6">Block User: {{ user_to_block.username }}</h2>
+    <p class="mb-4">Current Status:
+        {# Access blocked_until via user_to_block.userprofile #}
+        {% if user_to_block.userprofile.blocked_until and user_to_block.userprofile.blocked_until > now %}
+            <span class="badge badge-warning">Blocked Until: {{ user_to_block.userprofile.blocked_until|date:"Y-m-d H:i" }}</span>
+        {% else %}
+            <span class="badge badge-success">Not Currently Blocked</span>
+        {% endif %}
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} {# Renders the form fields #}
+        <p class="text-sm text-base-content mt-2">To unblock, clear the date field and save.</p>
+        <button type="submit" class="btn btn-primary mt-6">Update Block Status</button>
+        <a href="{% url 'custom_admin_users' %}" class="btn btn-ghost mt-6 ml-4">Cancel</a>
+    </form>
+</div>
+{% endblock %}

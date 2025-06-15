@@ -1,0 +1,63 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-8rem)] flex flex-col items-center justify-center px-4 py-8 text-base-content"> {# Adjust min-height based on your navbar, added text-base-content #}
+    <div class="card w-full max-w-md shadow-2xl bg-base-200 md:bg-base-300"> {# Use base-200 or base-300 for card #}
+        <form method="post" class="card-body">
+            {% csrf_token %}
+            <h2 class="text-3xl font-bold text-center text-primary mb-6">Login</h2>
+
+            {# Display non-field errors (e.g., "Invalid credentials") #}
+            {% if form.non_field_errors %}
+                <div role="alert" class="alert alert-error shadow-lg my-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <div>
+                        {% for error in form.non_field_errors %}
+                            <h3 class="font-bold">Error!</h3>
+                            <div class="text-xs">{{ error }}</div>
+                            {% if not forloop.last %}<br>{% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {# Iterate over visible fields #}
+            {% for field in form.visible_fields %}
+            <div class="form-control w-full mb-4">
+                <label class="label" for="{{ field.id_for_label }}">
+                    <span class="label-text text-base-content">{{ field.label }}</span>
+                </label>
+                {# 'field' will now render with classes and placeholder defined in forms.py #}
+                {{ field }}
+                {% if field.help_text %}
+                    <label class="label pt-1">
+                        <span class="label-text-alt text-xs">{{ field.help_text|safe }}</span>
+                    </label>
+                {% endif %}
+                {% for error in field.errors %}
+                    <label class="label pt-1">
+                        <span class="label-text-alt text-error text-xs">{{ error }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            {# Hidden fields if any #}
+            {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+
+            <div class="form-control mt-6">
+                <button type="submit" class="btn btn-primary w-full">Login</button>
+            </div>
+
+            <p class="mt-6 text-center text-sm">
+                Don't have an account? <a href="{% url 'signup' %}" class="link link-secondary hover:link-accent font-medium">Sign Up</a>
+            </p>
+            <p class="mt-2 text-center text-sm">
+                <a href="{% url 'password_reset' %}" class="link link-accent hover:link-secondary font-medium">Forgot Password?</a>
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}
