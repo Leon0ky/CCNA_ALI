@@ -1,1 +1,1 @@
-C:\Users\legen\Documents\Code\ccna\quiz\static\quiz\css\tailwindcss.exe
+\Documents\Code\ccna\quiz\static\quiz\css\tailwindcss.exe
