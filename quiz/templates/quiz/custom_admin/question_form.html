@@ -3,7 +3,8 @@
 {% block title %}{% if is_edit %}Edit Question{% else %}Add New Question{% endif %}{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-md">
+{# Changed bg-white to bg-base-100 for Abyss theme #}
+<div class="max-w-3xl mx-auto bg-base-100 p-8 rounded-xl shadow-md">
     <h2 class="text-3xl font-bold mb-6">{% if is_edit %}Edit Question{% else %}Add New Question{% endif %}</h2>
 
     <form method="post" enctype="multipart/form-data"> {# Needed for file uploads #}
@@ -25,7 +26,8 @@
             {{ form.image }}
             {% if form.image.errors %}<p class="text-error text-sm">{{ form.image.errors }}</p>{% endif %}
              {% if form.instance.image and form.instance.image.url %}
-                 <p class="text-sm mt-2">Current Image: <a href="{{ form.instance.image.url }}" target="_blank" class="text-blue-600 hover:underline">{{ form.instance.image.name }}</a></p>
+                 {# Changed text-blue-600 to text-info for theme consistency #}
+                 <p class="text-sm mt-2">Current Image: <a href="{{ form.instance.image.url }}" target="_blank" class="text-info hover:underline">View Image</a></p>
              {% endif %}
         </div>
          <div class="form-control mb-6">
@@ -39,7 +41,8 @@
         {{ formset.management_form }} {# Crucial for formsets #}
 
         {% for answer_form in formset %}
-             <div class="border p-4 rounded-md mb-4 bg-gray-50">
+             {# Changed bg-gray-50 to bg-base-200 for better contrast in dark theme #}
+             <div class="border p-4 rounded-md mb-4 bg-base-200">
                  {% if answer_form.errors %}<div class="alert alert-error shadow-lg mb-4">{% for field, errors in answer_form.errors.items %}{% for error in errors %}<p>{{ field|capfirst }}: {{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}
 
                 {{ answer_form.id }} {# Hidden field for existing answers #}

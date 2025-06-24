@@ -1,14 +1,15 @@
 {% load static %}
 <div class="navbar bg-neutral text-neutral-content rounded-box shadow-lg mb-8">
   <div class="navbar-start">
-    {# Hamburger menu for mobile (hidden on md and up) - KEEP THIS AS IS #}
+    {# Hamburger menu for mobile (hidden on md and up) #}
     <div class="dropdown">
       <div tabindex="0" role="button" class="btn btn-square btn-ghost md:hidden">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
       </div>
       <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 text-base-content">
-        {# Mobile Menu Items (duplicated for vertical layout) - KEEP THIS AS IS #}
-        <li><a href="{% url 'test_list' %}">Tests</a></li>
+        {# Mobile Menu Items #}
+        {# Added btn btn-ghost for consistent styling in mobile menu #}
+        <li><a href="{% url 'test_list' %}" class="btn btn-ghost w-full justify-start">Tests</a></li>
         {% if user.is_authenticated and user.is_staff %}
             <li>
                 <span>Admin</span>
@@ -19,46 +20,47 @@
                 </ul>
             </li>
         {% endif %}
-         {% if user.is_authenticated %}
-           <li><a href="{% url 'logout' %}">Logout ({{ user.username }})</a></li>
-         {% else %}
-           <li><a href="{% url 'login' %}">Login</a></li>
-           <li><a href="{% url 'signup' %}">Sign Up</a></li>
-         {% endif %}
+           {% if user.is_authenticated %}
+           <li><form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="w-full text-left btn btn-ghost normal-case p-2">Logout ({{ user.username }})</button></form></li>
+           {% else %}
+             {# MODIFIED: Changed Login to btn-primary for consistency in mobile menu #}
+             <li><a href="{% url 'login' %}" class="btn btn-primary w-full justify-start">Login</a></li>
+             <li><a href="{% url 'signup' %}" class="btn btn-primary w-full justify-start">Sign Up</a></li>
+           {% endif %}
       </ul>
     </div>
-    {# Brand/Logo - KEEP THIS AS IS #}
+    {# Brand/Logo #}
     <a href="{% url 'landing_page' %}" class="btn btn-ghost normal-case text-xl">Quiz App</a>
   </div>
 
   <div class="navbar-end">
-    {# Desktop Menu (hidden on smaller screens) - Find this UL #}
+    {# Desktop Menu (hidden on smaller screens) #}
     <ul class="menu menu-horizontal px-1 hidden md:flex text-neutral-content">
-      <li><a href="{% url 'test_list' %}">Tests</a></li>
+      {# Added btn btn-ghost for consistent height and alignment #}
+      <li><a href="{% url 'test_list' %}" class="btn btn-ghost">Tests</a></li>
       {% if user.is_authenticated and user.is_staff %}
-        {# --- REPLACE THIS LI BLOCK WITH THE ONE BELOW --- #}
-        <li class="dropdown dropdown-hover"> {# Use dropdown and dropdown-hover classes #}
-          <div tabindex="0" role="button" class="m-1"> {# The element that triggers the dropdown #}
+        {# REMOVED dropdown-hover to make it click-to-toggle. Kept just 'dropdown' #}
+        <li class="dropdown">
+          {# Changed m-1 to btn btn-ghost for consistent styling and alignment #}
+          <div tabindex="0" role="button" class="btn btn-ghost">
               Admin
           </div>
-          <ul tabindex="0" class="dropdown-content z-[1] menu p-2 bg-base-100 rounded-box w-52 text-base-content"> {# The dropdown content #}
+          {# Removed tabindex="0" from UL as it belongs on the trigger DIV #}
+          <ul class="dropdown-content z-[1] menu p-2 bg-base-100 rounded-box w-52 text-base-content">
               <li><a href="{% url 'custom_admin_tests' %}">Manage Tests</a></li>
               <li><a href="{% url 'custom_admin_questions' %}">Manage Questions</a></li>
               <li><a href="{% url 'custom_admin_users' %}">Manage Users</a></li>
           </ul>
         </li>
-        {# --- END OF REPLACEMENT --- #}
       {% endif %}
     </ul>
-    {# Login/Signup/Logout Buttons (visible on desktop) - KEEP THIS AS IS #}
-    <div class="hidden md:flex">
+    {# Login/Signup/Logout Buttons (visible on desktop) #}
+     <div class="hidden md:flex">
          {% if user.is_authenticated %}
-           <form action="{% url 'logout' %}" method="post" class="inline-block"> {# Add form for POST request, inline-block to prevent full width #}
-             {% csrf_token %} {# Django's security token #}
-             <button type="submit" class="btn btn-ghost">Logout ({{ user.username }})</button> {# Use button instead of link #}
-           </form>
+           <form action="{% url 'logout' %}" method="post" class="inline-block">{% csrf_token %}<button type="submit" class="btn btn-ghost">Logout ({{ user.username }})</button></form>
          {% else %}
-           <a href="{% url 'login' %}" class="btn btn-ghost">Login</a>
+           {# MODIFIED: Changed Login to btn-primary for consistency in desktop menu #}
+           <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
            <a href="{% url 'signup' %}" class="btn btn-primary ml-2">Sign Up</a>
          {% endif %}
      </div>

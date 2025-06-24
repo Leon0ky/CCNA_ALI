@@ -5705,6 +5705,9 @@
   .justify-end {
     justify-content: flex-end;
   }
+  .justify-start {
+    justify-content: flex-start;
+  }
   .gap-2 {
     gap: calc(var(--spacing) * 2);
   }
@@ -6552,6 +6555,9 @@
   .text-center {
     text-align: center;
   }
+  .text-left {
+    text-align: left;
+  }
   .file-input-lg {
     --size: calc(var(--size-field, 0.25rem) * 12);
     font-size: 1.125rem;
@@ -7041,6 +7047,9 @@
   }
   .text-green-600 {
     color: var(--color-green-600);
+  }
+  .text-info {
+    color: var(--color-info);
   }
   .text-neutral-content {
     color: var(--color-neutral-content);

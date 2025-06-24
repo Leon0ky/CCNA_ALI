@@ -13,14 +13,15 @@ from django.db.models import Count # For counting questions (already imported)
 from django.contrib.auth.models import User
 # Import your custom UserProfile model and the forms
 from .models import Test, Question, Answer, TestAttempt, UserAnswer, UserProfile
-from .forms import QuestionForm, AnswerForm, UserAnswerForm, TestForm, UserBlockForm
+from .forms import QuestionForm, AnswerForm, UserAnswerForm, TestForm, UserBlockForm, CustomUserCreationForm
 
 
 # --- Authentication Views ---
 
+
 def signup_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST) # <--- USE CustomUserCreationForm
         if form.is_valid():
             user = form.save()
             # Log the user in after successful signup
@@ -28,7 +29,7 @@ def signup_view(request):
             messages.success(request, f"Welcome, {user.username}! Your account has been created.")
             return redirect('test_list')  # Redirect to tests page or landing
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm() # <--- USE CustomUserCreationForm
     return render(request, 'registration/signup.html', {'form': form})
 
 # Django's built-in login/logout views via accounts/ urls are used automatically.
@@ -442,7 +443,7 @@ def custom_admin_tests(request):
     context = {
         'tests': tests,
     }
-    return render(request, 'quiz/custom_admin/tests_list.html', context)
+    return render(request, 'quiz/custom_admin/admin_tests_list.html', context)
 
 @user_passes_test(is_staff_check)
 def custom_admin_add_test(request):

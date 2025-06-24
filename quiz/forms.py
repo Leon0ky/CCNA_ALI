@@ -1,7 +1,9 @@
 from django import forms
 from django.utils import timezone # Needed for UserBlockForm's clean method
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm # <--- IMPORT UserCreationForm here
+from django.contrib.auth.models import User # Required for UserCreationForm's Meta class
 from .models import Question, Answer, Test, UserProfile # Import UserProfile
-# Note: UserCreationForm is used directly in views.py, not as a class here
+
 
 # --- Custom Admin Forms ---
 
@@ -53,8 +55,6 @@ class TestForm(forms.ModelForm):
 # --- Quiz Taking Form ---
 
 class UserAnswerForm(forms.Form):
-    # This form is generated dynamically in the view
-    # We need to initialize it with the question object
     selected_answers = forms.ModelMultipleChoiceField(
         queryset=Answer.objects.none(), # Empty queryset initially
         widget=forms.CheckboxSelectMultiple(), # Allows multiple selections
@@ -80,12 +80,53 @@ class UserBlockForm(forms.ModelForm):
     )
 
     class Meta:
-        model = UserProfile # <--- CORRECTED: Now targets UserProfile
+        model = UserProfile # Correctly targets UserProfile
         fields = ['blocked_until']
 
     def clean_blocked_until(self):
-        # Ensure the date is not in the past if provided
         blocked_until = self.cleaned_data.get('blocked_until')
         if blocked_until and blocked_until < timezone.now():
             raise forms.ValidationError("Block until date cannot be in the past.")
         return blocked_until
+
+# --- Custom Authentication Form for Login Page ---
+class CustomAuthenticationForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Apply DaisyUI input classes to username and password fields
+        self.fields['username'].widget.attrs.update({
+            'class': 'input input-bordered w-full',
+            'placeholder': 'Enter your username' # Optional placeholder
+        })
+        self.fields['password'].widget.attrs.update({
+            'class': 'input input-bordered w-full',
+            'placeholder': 'Enter your password' # Optional placeholder
+        })
+
+# --- NEW: Custom User Creation Form for Signup Page ---
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = User # Use Django's default User model
+        fields = UserCreationForm.Meta.fields # Inherit default fields (username, password, password2)
+        # If you wanted to add email, it would be fields = UserCreationForm.Meta.fields + ('email',)
+        # But we are using username as the primary field for UserCreationForm's built-in behavior.
+        # If you wanted email to be the primary field, you would have to define a full CustomUser model with USERNAME_FIELD = 'email'
+        # which we are not doing at this stage.
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Apply DaisyUI input classes to all fields
+        for field_name, field in self.fields.items():
+            # For password fields, Django's UserCreationForm uses help_text as labels, so adjust placeholders
+            placeholder_text = field.label or ''
+            if field_name == 'password2':
+                placeholder_text = 'Confirm Password'
+            elif field_name == 'password1': # Using password1 directly might clash with help_text or label, usually default is fine
+                placeholder_text = 'Password'
+            elif field_name == 'username':
+                placeholder_text = 'Choose a Username'
+
+            field.widget.attrs.update({
+                'class': 'input input-bordered w-full',
+                'placeholder': placeholder_text
+            })

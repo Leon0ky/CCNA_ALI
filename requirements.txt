@@ -1,5 +1,9 @@
 asgiref==3.8.1
-Django==5.2.1
-pillow==11.2.1
+crispy-tailwind==1.0.3
+Django==5.2
+django-allauth==65.8.0
+django-browser-reload==1.18.0
+django-crispy-forms==2.4
+django-tailwind==4.0.1
 sqlparse==0.5.3
 tzdata==2025.2

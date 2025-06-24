@@ -3,7 +3,7 @@
 {% block title %}{% if is_edit %}Edit Test Type{% else %}Add New Test Type{% endif %}{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md">
+<div class="max-w-md mx-auto bg-base-100 p-8 rounded-xl shadow-md"> {# Changed bg-white to bg-base-100 for Abyss theme #}
     <h2 class="text-3xl font-bold mb-6">{% if is_edit %}Edit Test Type{% else %}Add New Test Type{% endif %}</h2>
 
     <form method="post">

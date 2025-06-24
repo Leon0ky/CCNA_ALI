@@ -3,10 +3,13 @@
 {% block title %}Sign Up{% endblock %}
 
 {% block content %}
-<div class="min-h-[calc(100vh-8rem)] flex flex-col items-center justify-center px-4 py-8 text-base-content"> {# Adjust min-height if navbar is taller/shorter #}
+{# Adjust min-height if navbar is taller/shorter, added text-base-content for default text color #}
+<div class="min-h-[calc(100vh-8rem)] flex flex-col items-center justify-center px-4 py-8 text-base-content">
+    {# Use base-200 or base-300 for card background #}
     <div class="card w-full max-w-md shadow-2xl bg-base-200 md:bg-base-300">
         <form method="post" class="card-body">
             {% csrf_token %}
+            {# Changed text color to primary for consistency with theme #}
             <h2 class="text-3xl font-bold text-center text-primary mb-6">Create Account</h2>
 
             {# Display non-field errors #}
@@ -29,9 +32,8 @@
                 <label class="label" for="{{ field.id_for_label }}">
                     <span class="label-text text-base-content">{{ field.label }}</span>
                 </label>
-                {# THIS IS THE CORRECTED LINE: #}
+                {# 'field' will now render with classes and placeholder defined in forms.py (CustomUserCreationForm) #}
                 {{ field }}
-                {# This will render the widget with classes & placeholder from forms.py #}
                 {% if field.help_text %}
                     <label class="label pt-1">
                         <span class="label-text-alt text-xs">{{ field.help_text|safe }}</span>
@@ -53,7 +55,7 @@
             </div>
 
             <p class="mt-6 text-center text-sm">
-                Already have an account? <a href="{% url 'login' %}" class="link link-secondary hover:link-accent text-primary font-medium">Login</a>
+                Already have an account? <a href="{% url 'login' %}" class="link link-hover text-primary font-medium">Login</a> {# Updated link classes #}
             </p>
         </form>
     </div>

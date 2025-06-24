@@ -18,8 +18,9 @@
                         <th>Name</th>
                         <th>Type</th>
                         <th>Description</th>
+                        <th>Questions</th> {# <--- NEW COLUMN HEADER #}
                         <th>Actions</th>
-                        <th>Question Actions</th> {# <--- NEW COLUMN HEADER #}
+                        <th>Question Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -29,11 +30,18 @@
                         <td>{{ test.name }}</td>
                         <td><span class="badge badge-outline">{{ test.get_test_type_display }}</span></td>
                         <td>{{ test.description|truncatechars:100 }}</td>
+                        <td> {# <--- NEW CELL FOR QUESTION COUNT #}
+                            {% if test.question_count is not None %}
+                                <span class="badge badge-info">{{ test.question_count }}</span>
+                            {% else %}
+                                <span class="badge badge-ghost">0</span>
+                            {% endif %}
+                        </td>
                         <td class="flex flex-wrap gap-2"> {# Use flex-wrap and gap for spacing if many buttons #}
                             <a href="{% url 'custom_admin_edit_test' test.id %}" class="btn btn-sm btn-outline btn-info">Edit</a>
                             <a href="{% url 'custom_admin_delete_test' test.id %}" class="btn btn-sm btn-outline btn-error">Delete</a>
                         </td>
-                        <td> {# <--- NEW CELL FOR QUESTION ACTIONS #}
+                        <td> {# Question Actions cell #}
                             <a href="{% url 'custom_admin_test_questions' test.id %}" class="btn btn-sm btn-outline btn-primary">Manage Questions</a>
                         </td>
                     </tr>
