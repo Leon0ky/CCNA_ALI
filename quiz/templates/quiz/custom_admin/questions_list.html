@@ -22,7 +22,7 @@
                 {# Button to view all questions if currently filtered by a test #}
                 <a href="{% url 'custom_admin_questions' %}" class="btn btn-secondary">View All Questions</a>
             {% else %}
-                <a href="{% url 'custom_admin_add_question' %}" class="btn btn-primary">Add New Question</a>
+                <a href="{% url 'custom_admin_add_question' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary">Add New Question</a>
             {% endif %}
         </div>
     </div>
@@ -53,8 +53,8 @@
                             </ul>
                         </td>
                         <td class="flex flex-wrap gap-2"> {# Use flex-wrap and gap for spacing if many buttons #}
-                            <a href="{% url 'custom_admin_edit_question' question.id %}" class="btn btn-sm btn-outline btn-info">Edit</a>
-                            <a href="{% url 'custom_admin_delete_question' question.id %}" class="btn btn-sm btn-outline btn-error">Delete</a>
+                            <a href="{% url 'custom_admin_edit_question' question.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline btn-info">Edit</a>
+                            <a href="{% url 'custom_admin_delete_question' question.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline btn-error">Delete</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -67,7 +67,7 @@
                 No questions found for "{{ test_obj.name }}".
                 <a href="{% url 'custom_admin_add_question_to_test' test_obj.id %}" class="text-blue-400 hover:underline">Add one now</a>.
             {% else %}
-                No questions found. <a href="{% url 'custom_admin_add_question' %}" class="text-blue-400 hover:underline">Add one now</a>.
+                No questions found. <a href="{% url 'custom_admin_add_question' %}?next={{ request.get_full_path|urlencode }}" class="text-blue-400 hover:underline">Add one now</a>.
             {% endif %}
         </p>
     {% endif %}

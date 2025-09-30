@@ -8,6 +8,8 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib import messages
 from django.db.models import Count # For counting questions (already imported)
+from django.http import JsonResponse
+import json
 
 # Import Django's default User model
 from django.contrib.auth.models import User
@@ -44,8 +46,8 @@ def landing_page(request):
 
 @login_required
 def test_list(request):
-    # --- MODIFIED: Annotate tests with question_count ---
-    tests = Test.objects.annotate(question_count=Count('questions')).order_by('name')
+    # --- MODIFIED: Annotate tests with question_count and order by position ---
+    tests = Test.objects.annotate(question_count=Count('questions')).order_by('position', 'name')
     # --- END MODIFIED ---
     return render(request, 'quiz/test_list.html', {'tests': tests})
 
@@ -99,8 +101,9 @@ def take_question(request, attempt_id, question_index):
         # Use the form to handle selected answers
         form = UserAnswerForm(request.POST, question=current_question)
         if form.is_valid():
-            selected_answer_ids = form.cleaned_data['selected_answers']
-            selected_answer_objects = Answer.objects.filter(id__in=selected_answer_ids)
+            selected_answer_objects = form.cleaned_data['selected_answers']
+            # Extract IDs from Answer objects for comparison
+            selected_answer_ids = [answer.id for answer in selected_answer_objects]
 
             # Use a transaction for atomic save
             with transaction.atomic():
@@ -271,6 +274,25 @@ def test_results(request, attempt_id):
 def is_staff_check(user):
     return user.is_staff
 
+@login_required
+@user_passes_test(is_staff_check)
+def reorder_tests(request):
+    """Handle test reordering via AJAX"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            test_ids = data.get('test_ids', [])
+            
+            # Update positions for each test
+            for index, test_id in enumerate(test_ids):
+                Test.objects.filter(id=test_id).update(position=index)
+            
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
 # --- MODIFIED: custom_admin_questions to handle optional test_id ---
 @user_passes_test(is_staff_check)
 def custom_admin_questions(request, test_id=None): # <--- Added optional test_id parameter
@@ -303,7 +325,7 @@ def custom_admin_add_question(request, test_id=None): # <--- Added optional test
     if request.method == 'POST':
         form = QuestionForm(request.POST, request.FILES) # Initial data is not passed directly here if POST
         formset = AnswerInlineFormSet(request.POST, request.FILES)
-        if form.is_valid():
+        if form.is_valid() and formset.is_valid():
             question = form.save(commit=False)
             # Ensure the test field is correctly set, especially if it was pre-filled or hidden
             if test_obj: # If coming from a test-specific URL
@@ -314,27 +336,33 @@ def custom_admin_add_question(request, test_id=None): # <--- Added optional test
             has_correct_answer = any(answer.get('is_correct') for answer in answers_data if not answer.get('DELETE'))
 
             if has_correct_answer:
-                question.save() # Save question first to get an ID
-                formset = AnswerInlineFormSet(request.POST, request.FILES, instance=question) # Re-initialize formset with instance
-                if formset.is_valid():
-                     # Ensure exactly 4 answers are submitted
-                    valid_answers_count = sum(1 for form in formset if not form.cleaned_data.get('DELETE'))
-                    if valid_answers_count == 4:
-                        formset.save()
-                        # Redirect back to test-specific questions list if applicable, else general questions
-                        if test_obj:
-                            messages.success(request, "Question added successfully to " + test_obj.name + ".")
-                            return redirect(reverse('custom_admin_test_questions', args=[test_obj.id]))
-                        else:
-                            messages.success(request, "Question added successfully.")
-                            return redirect('custom_admin_questions')
+                # Ensure exactly 4 answers are submitted
+                valid_answers_count = sum(1 for form in formset if not form.cleaned_data.get('DELETE'))
+                if valid_answers_count == 4:
+                    question.save() # Save question first to get an ID
+                    formset.instance = question # Set the instance for the formset
+                    formset.save()
+                    # Redirect back to test-specific questions list if applicable, else general questions
+                    if test_obj:
+                        messages.success(request, "Question added successfully to " + test_obj.name + ".")
+                        return redirect(reverse('custom_admin_test_questions', args=[test_obj.id]))
                     else:
-                        form.add_error(None, "Please provide exactly 4 answers.") # Add error to main form
+                        messages.success(request, "Question added successfully.")
+                        # Check for next parameter to redirect back to the correct page
+                        next_url = request.POST.get('next') or request.GET.get('next')
+                        if next_url:
+                            return redirect(next_url)
+                        return redirect('custom_admin_questions')
                 else:
-                    # If formset is invalid, add formset errors to context
-                    messages.error(request, "Please correct the errors in the answers.")
+                    form.add_error(None, "Please provide exactly 4 answers.") # Add error to main form
             else:
                 form.add_error(None, "Please mark at least one answer as correct.") # Add error to main form
+        else:
+            # If form or formset is invalid, add errors to context
+            if not form.is_valid():
+                messages.error(request, "Please correct the errors in the question form.")
+            if not formset.is_valid():
+                messages.error(request, "Please correct the errors in the answers.")
 
     else: # GET request
         form = QuestionForm(initial=initial_data) # <--- Pass initial data here
@@ -357,26 +385,33 @@ def custom_admin_edit_question(request, question_id):
     if request.method == 'POST':
         form = QuestionForm(request.POST, request.FILES, instance=question)
         formset = AnswerInlineFormSet(request.POST, request.FILES, instance=question)
-        if form.is_valid():
+        if form.is_valid() and formset.is_valid():
             # Ensure at least one correct answer is selected (basic validation)
             answers_data = formset.cleaned_data
             has_correct_answer = any(answer.get('is_correct') for answer in answers_data if not answer.get('DELETE'))
 
             if has_correct_answer:
-                question = form.save()
-                formset = AnswerInlineFormSet(request.POST, request.FILES, instance=question) # Re-initialize
-                if formset.is_valid():
-                    # Ensure exactly 4 answers remain after potential deletion
-                    valid_answers_count = sum(1 for form in formset if not form.cleaned_data.get('DELETE'))
-                    if valid_answers_count == 4:
-                        messages.success(request, "Question updated successfully.")
-                        return redirect('custom_admin_questions') # Redirect back to general questions list
-                    else:
-                         form.add_error(None, "Please ensure exactly 4 answers remain.") # Add error to main form
+                # Ensure exactly 4 answers remain after potential deletion
+                valid_answers_count = sum(1 for form in formset if not form.cleaned_data.get('DELETE'))
+                if valid_answers_count == 4:
+                    form.save()
+                    formset.save()
+                    messages.success(request, "Question updated successfully.")
+                    # Check for next parameter to redirect back to the correct page
+                    next_url = request.POST.get('next') or request.GET.get('next')
+                    if next_url:
+                        return redirect(next_url)
+                    return redirect('custom_admin_questions') # Fallback to general questions list
                 else:
-                    messages.error(request, "Please correct the errors in the answers.")
+                    form.add_error(None, "Please ensure exactly 4 answers remain.") # Add error to main form
             else:
-                 form.add_error(None, "Please mark at least one answer as correct.") # Add error to main form
+                form.add_error(None, "Please mark at least one answer as correct.") # Add error to main form
+        else:
+            # If form or formset is invalid, add errors to context
+            if not form.is_valid():
+                messages.error(request, "Please correct the errors in the question form.")
+            if not formset.is_valid():
+                messages.error(request, "Please correct the errors in the answers.")
 
 
     else: # GET request
@@ -395,12 +430,17 @@ def custom_admin_edit_question(request, question_id):
 @user_passes_test(is_staff_check)
 def custom_admin_delete_question(request, question_id):
     question = get_object_or_404(Question, id=question_id)
+    next_url = request.GET.get('next') or request.POST.get('next')
+    redirect_url = next_url if next_url else reverse('custom_admin_questions')
     if request.method == 'POST':
         question.delete()
         messages.success(request, f"Question '{question.text[:30]}...' deleted successfully.")
-        return redirect('custom_admin_questions')
-    # You could add a confirmation page here
-    return render(request, 'quiz/custom_admin/question_confirm_delete.html', {'question': question})
+        return redirect(redirect_url)
+    # Confirmation page, pass redirect_url for cancel button
+    return render(request, 'quiz/custom_admin/question_confirm_delete.html', {
+        'question': question,
+        'redirect_url': redirect_url
+    })
 
 @user_passes_test(is_staff_check)
 def custom_admin_users(request):

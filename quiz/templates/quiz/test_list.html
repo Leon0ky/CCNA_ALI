@@ -3,31 +3,274 @@
 {% block title %}Available Tests{% endblock %}
 
 {% block content %}
-<h2 class="text-3xl font-bold mb-6">Available Tests</h2>
+{% csrf_token %}
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-3xl font-bold">Available Tests</h2>
+    {% if user.is_staff %}
+        <button id="toggleReorder" class="btn btn-secondary btn-sm">
+            <span id="reorderText">Enable Reorder</span>
+        </button>
+    {% endif %}
+</div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div id="testsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for test in tests %}
-    <div class="card bg-neutral shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
-      <div class="card-body">
-        <h3 class="card-title">{{ test.name }}</h3>
-        <p>{{ test.description }}</p>
-        <div class="flex justify-between items-center mt-2 mb-4"> {# Use flex to align badges/counts #}
-            <div class="badge badge-outline">{{ test.get_test_type_display }}</div>
-            {# Display question count here #}
-            {% if test.question_count is not None %}
-                <div class="badge badge-secondary">{{ test.question_count }} Questions</div>
-            {% else %}
-                {# Fallback if count is not available (shouldn't happen with updated view) #}
-                <div class="badge badge-secondary">0 Questions</div>
+    <div class="test-card card bg-neutral shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 relative" data-test-id="{{ test.id }}">
+        <div class="card-body flex flex-row items-center justify-between"> {# Added flex and items-center for horizontal alignment #}
+            <div> {# Wrap existing card-body content in a div #}
+                <h3 class="card-title">{{ test.name }}</h3>
+                <p>{{ test.description }}</p>
+                <div class="flex justify-between items-center mt-2 mb-4">
+                    <div class="badge badge-outline">{{ test.get_test_type_display }}</div>
+                    {% if test.question_count is not None %}
+                        <div class="badge badge-secondary">{{ test.question_count }} Questions</div>
+                    {% else %}
+                        <div class="badge badge-secondary">0 Questions</div>
+                    {% endif %}
+                </div>
+                <div class="card-actions justify-end">
+                    <a href="{% url 'start_test' test.id %}" class="btn btn-primary start-test-btn">Start Test</a>
+                </div>
+            </div>
+            {% if user.is_staff %}
+            <div class="reorder-controls hidden flex-col gap-2 ml-4"> {# Removed absolute positioning, added ml-4 for spacing #}
+                <button class="move-up-btn btn btn-sm btn-success" data-test-id="{{ test.id }}" title="Move Up">
+                    <span class="text-sm font-bold">▲</span>
+                </button>
+                <button class="move-down-btn btn btn-sm btn-error" data-test-id="{{ test.id }}" title="Move Down">
+                    <span class="text-sm font-bold">▼</span>
+                </button>
+            </div>
             {% endif %}
         </div>
-        <div class="card-actions justify-end">
-          <a href="{% url 'start_test' test.id %}" class="btn btn-primary">Start Test</a>
-        </div>
-      </div>
     </div>
     {% empty %}
     <p>No tests available yet.</p>
     {% endfor %}
 </div>
+
+{% if user.is_staff %}
+<div id="saveOrderContainer" class="hidden mt-6 text-center">
+    <button id="saveOrder" class="btn btn-success">Save New Order</button>
+    <button id="cancelReorder" class="btn btn-ghost">Cancel</button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if user.is_staff %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggleReorder');
+    const reorderText = document.getElementById('reorderText');
+    const testsContainer = document.getElementById('testsContainer');
+    const saveOrderContainer = document.getElementById('saveOrderContainer');
+    const saveOrderBtn = document.getElementById('saveOrder');
+    const cancelBtn = document.getElementById('cancelReorder');
+    
+    let isReorderMode = false;
+    let originalOrder = [];
+    let hasChanges = false;
+    
+    function enableReorderMode() {
+        isReorderMode = true;
+        hasChanges = false;
+        reorderText.textContent = 'Disable Reorder';
+        toggleBtn.classList.remove('btn-secondary');
+        toggleBtn.classList.add('btn-warning');
+        
+        // Store original order
+        originalOrder = Array.from(testsContainer.children).map(card => card.dataset.testId);
+        
+        // Change to single column layout for easier reordering
+        testsContainer.classList.remove('grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3');
+        testsContainer.classList.add('flex', 'flex-col', 'space-y-4');
+        
+        // Show reorder controls
+        const reorderControls = document.querySelectorAll('.reorder-controls');
+        reorderControls.forEach(control => control.classList.remove('hidden'));
+        
+        // Disable start test buttons
+        const startTestBtns = document.querySelectorAll('.start-test-btn');
+        startTestBtns.forEach(btn => {
+            btn.classList.add('btn-disabled');
+            btn.style.pointerEvents = 'none';
+        });
+        
+        // Show save/cancel buttons
+        saveOrderContainer.classList.remove('hidden');
+        
+        // Add instruction message
+        const instructionDiv = document.createElement('div');
+        instructionDiv.id = 'reorderInstructions';
+        instructionDiv.className = 'alert alert-info mb-4';
+        instructionDiv.innerHTML = '<span>💡 Use the up ↑ and down ↓ arrow buttons to reorder the tests.</span>';
+        testsContainer.parentNode.insertBefore(instructionDiv, testsContainer);
+        
+        // Add event listeners for move buttons
+        addMoveButtonListeners();
+    }
+    
+    function disableReorderMode() {
+        isReorderMode = false;
+        reorderText.textContent = 'Enable Reorder';
+        toggleBtn.classList.remove('btn-warning');
+        toggleBtn.classList.add('btn-secondary');
+        
+        // Restore grid layout
+        testsContainer.classList.remove('flex', 'flex-col', 'space-y-4');
+        testsContainer.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3');
+        
+        // Hide reorder controls
+        const reorderControls = document.querySelectorAll('.reorder-controls');
+        reorderControls.forEach(control => control.classList.add('hidden'));
+        
+        // Enable start test buttons
+        const startTestBtns = document.querySelectorAll('.start-test-btn');
+        startTestBtns.forEach(btn => {
+            btn.classList.remove('btn-disabled');
+            btn.style.pointerEvents = 'auto';
+        });
+        
+        // Hide save/cancel buttons
+        saveOrderContainer.classList.add('hidden');
+        
+        // Remove instruction message
+        const instructionDiv = document.getElementById('reorderInstructions');
+        if (instructionDiv) {
+            instructionDiv.remove();
+        }
+        
+        // Remove event listeners
+        removeMoveButtonListeners();
+    }
+    
+    function addMoveButtonListeners() {
+        const moveUpBtns = document.querySelectorAll('.move-up-btn');
+        const moveDownBtns = document.querySelectorAll('.move-down-btn');
+        
+        moveUpBtns.forEach(btn => {
+            btn.addEventListener('click', handleMoveUp);
+        });
+        
+        moveDownBtns.forEach(btn => {
+            btn.addEventListener('click', handleMoveDown);
+        });
+    }
+    
+    function removeMoveButtonListeners() {
+        const moveUpBtns = document.querySelectorAll('.move-up-btn');
+        const moveDownBtns = document.querySelectorAll('.move-down-btn');
+        
+        moveUpBtns.forEach(btn => {
+            btn.removeEventListener('click', handleMoveUp);
+        });
+        
+        moveDownBtns.forEach(btn => {
+            btn.removeEventListener('click', handleMoveDown);
+        });
+    }
+    
+    function handleMoveUp(event) {
+        event.preventDefault();
+        const testId = event.currentTarget.dataset.testId;
+        const card = testsContainer.querySelector(`[data-test-id="${testId}"]`);
+        const previousCard = card.previousElementSibling;
+        
+        if (previousCard) {
+            testsContainer.insertBefore(card, previousCard);
+            hasChanges = true;
+            animateMove(card, 'up');
+        }
+    }
+    
+    function handleMoveDown(event) {
+        event.preventDefault();
+        const testId = event.currentTarget.dataset.testId;
+        const card = testsContainer.querySelector(`[data-test-id="${testId}"]`);
+        const nextCard = card.nextElementSibling;
+        
+        if (nextCard) {
+            testsContainer.insertBefore(nextCard, card);
+            hasChanges = true;
+            animateMove(card, 'down');
+        }
+    }
+    
+    function animateMove(card, direction) {
+        // Add a brief highlight animation
+        card.classList.add('ring-2', 'ring-primary');
+        setTimeout(() => {
+            card.classList.remove('ring-2', 'ring-primary');
+        }, 300);
+    }
+    
+    function saveOrder() {
+        if (!hasChanges) {
+            disableReorderMode();
+            return;
+        }
+        
+        const newOrder = Array.from(testsContainer.children).map(card => card.dataset.testId);
+        
+        // Show loading state
+        saveOrderBtn.disabled = true;
+        saveOrderBtn.textContent = 'Saving...';
+        
+        fetch('{% url "reorder_tests" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({
+                test_ids: newOrder
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                disableReorderMode();
+                // Show success message
+                const successDiv = document.createElement('div');
+                successDiv.className = 'alert alert-success mb-4';
+                successDiv.innerHTML = '<span>✅ Test order saved successfully!</span>';
+                testsContainer.parentNode.insertBefore(successDiv, testsContainer);
+                setTimeout(() => successDiv.remove(), 3000);
+            } else {
+                alert('Error saving order: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving order');
+        })
+        .finally(() => {
+            saveOrderBtn.disabled = false;
+            saveOrderBtn.textContent = 'Save New Order';
+        });
+    }
+    
+    function cancelReorder() {
+        // Restore original order
+        originalOrder.forEach((testId) => {
+            const card = testsContainer.querySelector(`[data-test-id="${testId}"]`);
+            testsContainer.appendChild(card);
+        });
+        disableReorderMode();
+    }
+    
+    toggleBtn.addEventListener('click', function() {
+        if (isReorderMode) {
+            disableReorderMode();
+        } else {
+            enableReorderMode();
+        }
+    });
+    
+    saveOrderBtn.addEventListener('click', saveOrder);
+    cancelBtn.addEventListener('click', cancelReorder);
+});
+</script>
+{% endif %}
 {% endblock %}

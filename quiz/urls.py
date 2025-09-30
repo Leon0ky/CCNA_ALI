@@ -5,7 +5,7 @@ from .views import (
     signup_view,
 
     # Test Views (User Facing)
-    test_list, start_test, take_question, finish_test, test_results,
+    test_list, start_test, take_question, finish_test, test_results, reorder_tests,
 
     # Custom Admin Views (Questions)
     custom_admin_questions, custom_admin_add_question, custom_admin_edit_question, custom_admin_delete_question,
@@ -28,6 +28,7 @@ urlpatterns = [
 
     # Test Views (User Facing)
     path('tests/', test_list, name='test_list'),
+    path('tests/reorder/', reorder_tests, name='reorder_tests'),
     path('tests/start/<int:test_id>/', start_test, name='start_test'),
     path('tests/take/<int:attempt_id>/<int:question_index>/', take_question, name='take_question'),
     path('tests/finish/<int:attempt_id>/', finish_test, name='finish_test'),

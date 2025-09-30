@@ -3,15 +3,20 @@
 {% block title %}Delete Question{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md text-center">
+<div class="max-w-md mx-auto bg-neutral p-8 rounded-xl shadow-md text-center">
     <h2 class="text-2xl font-bold mb-6">Confirm Delete</h2>
     <p class="mb-4">Are you sure you want to delete the question:</p>
     <p class="italic font-semibold mb-6">"{{ question.text|truncatechars:100 }}"</p>
 
-    <form method="post">
+    <form method="post" action="?{% if request.GET.next %}next={{ request.GET.next }}{% endif %}">
         {% csrf_token %}
+        {% if request.GET.next %}
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% elif redirect_url %}
+            <input type="hidden" name="next" value="{{ redirect_url }}">
+        {% endif %}
         <button type="submit" class="btn btn-error mr-4">Yes, Delete</button>
-        <a href="{% url 'custom_admin_questions' %}" class="btn btn-ghost">Cancel</a>
+        <a href="{{ request.GET.next|default:redirect_url }}" class="btn btn-ghost">Cancel</a>
     </form>
 </div>
 {% endblock %}

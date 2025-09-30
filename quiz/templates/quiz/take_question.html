@@ -8,7 +8,7 @@
         <div class="card-body">
             <div class="mb-6">
                 <p class="text-sm text-center text-base-content/70 mb-2">Question {{ question_index|add:1 }} of {{ total_questions }}</p>
-                <h2 class="card-title text-xl md:text-2xl font-semibold text-center !block">{{ question.text|safe }}</h2> {# !block to override DaisyUI card-title flex behavior if needed #}
+                <h2 class="card-title text-xl md:text-2xl font-semibold text-center !block break-words" style="word-break: break-word; overflow-wrap: break-word; hyphens: auto;">{{ question.text|safe }}</h2> {# !block to override DaisyUI card-title flex behavior if needed #}
             </div>
 
             {% if question.image %}
@@ -30,9 +30,9 @@
                     <span>{% if is_user_correct %}Correct!{% else %}Incorrect.{% endif %}</span>
                 </div>
 
-                <div class="mb-4 p-4 bg-base-100 rounded-lg">
+                <div class="mb-4 p-4 bg-base-100 rounded-lg" style="max-width: 100%; overflow-wrap: break-word;">
                     <h4 class="text-lg font-semibold text-accent mb-2">Explanation:</h4>
-                    <div class="prose prose-sm max-w-none text-base-content"> {# DaisyUI prose class for formatted text #}
+                    <div class="prose prose-sm max-w-none text-base-content" style="word-break: break-word; overflow-wrap: break-word; hyphens: auto;"> {# DaisyUI prose class for formatted text #}
                         {{ question.explanation|safe|linebreaks }}
                     </div>
                 </div>
@@ -41,7 +41,7 @@
                     <h4 class="text-lg font-semibold text-accent mb-2">Correct Answer(s):</h4>
                     <ul class="list-disc list-inside ml-4 space-y-1">
                         {% for answer in correct_answers %}
-                            <li><span class="font-medium">{{ answer.text }}</span></li>
+                            <li><span class="font-medium break-words" style="word-break: break-word; overflow-wrap: break-word;">{{ answer.text }}</span></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -67,12 +67,14 @@
                         {# e.g., class="radio radio-primary" or "checkbox checkbox-primary" #}
                         {# This is ideally set in forms.py via widget attrs. #}
                         {% for choice_widget in form.selected_answers %}
-                        <div class="flex items-center p-3 rounded-lg hover:bg-base-300/70 border border-base-300 transition-colors duration-150 ease-in-out">
+                        <div class="flex items-start p-3 rounded-lg hover:bg-base-300/70 border border-base-300 transition-colors duration-150 ease-in-out w-full" style="max-width: 100%; overflow-wrap: break-word;">
                             {# choice_widget.tag contains the <input type="radio/checkbox"...> #}
                             {# If you can't add class directly in forms.py, this won't apply DaisyUI style to the input itself #}
-                            {{ choice_widget.tag }}
-                            <label class="label cursor-pointer flex-grow pl-3" for="{{ choice_widget.id_for_label }}">
-                                <span class="label-text text-base-content">{{ choice_widget.choice_label }}</span>
+                            <div class="flex-shrink-0 mt-1">
+                                {{ choice_widget.tag }}
+                            </div>
+                            <label class="label cursor-pointer flex-1 pl-3 min-w-0" for="{{ choice_widget.id_for_label }}" style="max-width: calc(100% - 2rem);">
+                                <span class="label-text text-base-content leading-relaxed block" style="word-break: break-word; overflow-wrap: break-word; hyphens: auto; white-space: normal;">{{ choice_widget.choice_label }}</span>
                             </label>
                         </div>
                         {% endfor %}

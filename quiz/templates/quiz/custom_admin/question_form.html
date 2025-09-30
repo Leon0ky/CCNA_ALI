@@ -1,15 +1,11 @@
 {% extends 'quiz/base.html' %}
-
 {% block title %}{% if is_edit %}Edit Question{% else %}Add New Question{% endif %}{% endblock %}
-
 {% block content %}
 {# Changed bg-white to bg-base-100 for Abyss theme #}
 <div class="max-w-3xl mx-auto bg-base-100 p-8 rounded-xl shadow-md">
     <h2 class="text-3xl font-bold mb-6">{% if is_edit %}Edit Question{% else %}Add New Question{% endif %}</h2>
-
     <form method="post" enctype="multipart/form-data"> {# Needed for file uploads #}
         {% csrf_token %}
-
         {# Main Question Form #}
         <div class="form-control mb-4">
             {{ form.test.label_tag }}
@@ -18,64 +14,157 @@
         </div>
         <div class="form-control mb-4">
             {{ form.text.label_tag }}
-            {{ form.text }}
+            <textarea 
+                name="{{ form.text.html_name }}" 
+                id="{{ form.text.id_for_label }}"
+                class="textarea textarea-bordered w-full resize-none overflow-hidden min-h-[2.5rem]" 
+                placeholder="Enter your question text..."
+                oninput="autoResize(this)"
+                rows="1">{{ form.text.value|default:'' }}</textarea>
             {% if form.text.errors %}<p class="text-error text-sm">{{ form.text.errors }}</p>{% endif %}
         </div>
-         <div class="form-control mb-4">
+        <div class="form-control mb-4">
             {{ form.image.label_tag }}
             {{ form.image }}
             {% if form.image.errors %}<p class="text-error text-sm">{{ form.image.errors }}</p>{% endif %}
-             {% if form.instance.image and form.instance.image.url %}
-                 {# Changed text-blue-600 to text-info for theme consistency #}
-                 <p class="text-sm mt-2">Current Image: <a href="{{ form.instance.image.url }}" target="_blank" class="text-info hover:underline">View Image</a></p>
-             {% endif %}
+            {% if form.instance.image and form.instance.image.url %}
+            {# Changed text-blue-600 to text-info for theme consistency #}
+            <p class="text-sm mt-2">Current Image: <a href="{{ form.instance.image.url }}" target="_blank"
+                    class="text-info hover:underline">View Image</a></p>
+            {% endif %}
         </div>
-         <div class="form-control mb-6">
-            {{ form.explanation.label_tag }}
-            {{ form.explanation }}
-            {% if form.explanation.errors %}<p class="text-error text-sm">{{ form.explanation.errors }}</p>{% endif %}
-        </div>
-
         {# Inline Formset for Answers #}
         <h3 class="text-xl font-semibold mb-4">Answers (provide exactly 4)</h3>
         {{ formset.management_form }} {# Crucial for formsets #}
-
         {% for answer_form in formset %}
-             {# Changed bg-gray-50 to bg-base-200 for better contrast in dark theme #}
-             <div class="border p-4 rounded-md mb-4 bg-base-200">
-                 {% if answer_form.errors %}<div class="alert alert-error shadow-lg mb-4">{% for field, errors in answer_form.errors.items %}{% for error in errors %}<p>{{ field|capfirst }}: {{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}
-
-                {{ answer_form.id }} {# Hidden field for existing answers #}
-                {{ answer_form.DELETE }} {# Hidden checkbox for deletion #}
-
-                <div class="form-control mb-2">
-                    {{ answer_form.text.label_tag }}
-                    {{ answer_form.text }}
+        {# Changed bg-gray-50 to bg-base-200 for better contrast in dark theme #}
+        <div class="border p-4 rounded-md mb-4 bg-base-200">
+            {% if answer_form.errors %}
+                <div class="alert alert-error shadow-lg mb-4">
+                    {% for field, errors in answer_form.errors.items %}
+                        {% for error in errors %}
+                            <p><strong>{{ field|capfirst }}:</strong> {{ error }}</p>
+                        {% endfor %}
+                    {% endfor %}
                 </div>
-                <div class="form-control flex-row items-center">
-                     {{ answer_form.is_correct.label_tag }}
-                     {{ answer_form.is_correct }}
-                 </div>
-             </div>
-        {% endfor %}
-
-         {% if formset.non_form_errors %}
-            <div class="alert alert-error shadow-lg mb-4">
-                 {% for error in formset.non_form_errors %}
-                     <p>{{ error }}</p>
-                 {% endfor %}
+            {% endif %}
+            {{ answer_form.id }} {# Hidden field for existing answers #}
+            {{ answer_form.DELETE }} {# Hidden checkbox for deletion #}
+            <div class="form-control mb-2">
+                {{ answer_form.text.label_tag }}
+                {{ answer_form.text }}
+                <div class="text-xs text-gray-500 mt-1">
+                    <span id="char-count-{{ answer_form.text.id_for_label }}">0</span>/1000 characters
+                </div>
+                {% if answer_form.text.errors %}
+                    <p class="text-error text-sm mt-1">{{ answer_form.text.errors.0 }}</p>
+                {% endif %}
             </div>
-         {% endif %}
-         {% if form.non_field_errors %}
-             <div class="alert alert-error shadow-lg mb-4">
-                 {% for error in form.non_field_errors %}
-                     <p>{{ error }}</p>
-                 {% endfor %}
-             </div>
-         {% endif %}
-
+            <div class="form-control flex-row items-center">
+                {{ answer_form.is_correct.label_tag }}
+                {{ answer_form.is_correct }}
+                {% if answer_form.is_correct.errors %}
+                    <p class="text-error text-sm ml-2">{{ answer_form.is_correct.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        
+        {# Explanation field moved after answers #}
+        <div class="form-control mb-6">
+            {{ form.explanation.label_tag }}
+            <textarea 
+                name="{{ form.explanation.html_name }}" 
+                id="{{ form.explanation.id_for_label }}"
+                class="textarea textarea-bordered w-full resize-none overflow-hidden min-h-[2.5rem]" 
+                placeholder="Enter explanation for this question..."
+                oninput="autoResize(this)"
+                rows="1">{{ form.explanation.value|default:'' }}</textarea>
+            {% if form.explanation.errors %}<p class="text-error text-sm">{{ form.explanation.errors }}</p>{% endif %}
+        </div>
+        
+        {% if formset.non_form_errors %}
+        <div class="alert alert-error shadow-lg mb-4">
+            {% for error in formset.non_form_errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-error shadow-lg mb-4">
+            {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
         <button type="submit" class="btn btn-primary mt-6">Save Question</button>
-        <a href="{% url 'custom_admin_questions' %}" class="btn btn-ghost mt-6 ml-4">Cancel</a>
+        {% if request.GET.next %}
+            <a href="{{ request.GET.next }}" class="btn btn-ghost mt-6 ml-4">Cancel</a>
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% else %}
+            <a href="{% url 'custom_admin_questions' %}" class="btn btn-ghost mt-6 ml-4">Cancel</a>
+        {% endif %}
     </form>
 </div>
+
+<script>
+function autoResize(textarea) {
+    // Reset height to auto to get the correct scrollHeight
+    textarea.style.height = 'auto';
+    // Set the height to the scrollHeight (content height)
+    textarea.style.height = Math.max(textarea.scrollHeight, 40) + 'px';
+}
+
+function updateCharCount(input) {
+    const charCountElement = document.getElementById('char-count-' + input.id);
+    if (charCountElement) {
+        charCountElement.textContent = input.value.length;
+        // Change color if approaching limit
+        if (input.value.length > 900) {
+            charCountElement.classList.remove('text-warning');
+            charCountElement.classList.add('text-error');
+        } else if (input.value.length > 800) {
+            charCountElement.classList.add('text-warning');
+            charCountElement.classList.remove('text-error');
+        } else {
+            charCountElement.classList.remove('text-warning', 'text-error');
+        }
+    }
+}
+
+// Initialize auto-resize and character counts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-resize for textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(function(textarea) {
+        autoResize(textarea);
+        // Add event listener for auto-resize
+        textarea.addEventListener('input', function() {
+            autoResize(this);
+        });
+    });
+    
+    // Character count for answer textareas (they have 'text' in their name)
+    const answerTextareas = document.querySelectorAll('textarea[name*="text"]');
+    answerTextareas.forEach(function(textarea) {
+        // Initialize character count
+        updateCharCount(textarea);
+        // Add event listener for real-time updates
+        textarea.addEventListener('input', function() {
+            updateCharCount(this);
+        });
+    });
+    
+    // Also handle regular inputs if any exist
+    const answerInputs = document.querySelectorAll('input[name*="text"]');
+    answerInputs.forEach(function(input) {
+        // Initialize character count
+        updateCharCount(input);
+        // Add event listener for real-time updates
+        input.addEventListener('input', function() {
+            updateCharCount(this);
+        });
+    });
+});
+</script>
 {% endblock %}

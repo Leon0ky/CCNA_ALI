@@ -27,13 +27,27 @@ class AnswerForm(forms.ModelForm):
         model = Answer
         fields = ['text', 'is_correct']
         widgets = {
-            'text': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
+            'text': forms.Textarea(attrs={
+                'class': 'textarea textarea-bordered w-full resize-none overflow-hidden min-h-[2.5rem]',
+                'maxlength': '1000',
+                'placeholder': 'Enter answer choice text (max 1000 characters)',
+                'rows': '1',
+                'oninput': 'autoResize(this)'
+            }),
             'is_correct': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
         }
         labels = {
             'text': 'Answer Text',
             'is_correct': 'Is Correct?',
         }
+    
+    def clean_text(self):
+        text = self.cleaned_data.get('text')
+        if text and len(text.strip()) < 1:
+            raise forms.ValidationError("Answer text cannot be empty.")
+        if text and len(text) > 1000:
+            raise forms.ValidationError("Answer text must be 1000 characters or less.")
+        return text.strip() if text else text
 
 
 class TestForm(forms.ModelForm):

@@ -46,6 +46,10 @@ class Test(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     test_type = models.CharField(max_length=10, choices=TEST_TYPES, default='learning')
+    position = models.PositiveIntegerField(default=0, help_text="Display order of the test")
+
+    class Meta:
+        ordering = ['position', 'name']
 
     def __str__(self):
         return f"{self.name} ({self.get_test_type_display()})"
@@ -63,7 +67,7 @@ class Question(models.Model):
 class Answer(models.Model):
     """ Represents an answer choice for a question """
     question = models.ForeignKey(Question, related_name='answers', on_delete=models.CASCADE)
-    text = models.CharField(max_length=255)
+    text = models.CharField(max_length=1000)
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
